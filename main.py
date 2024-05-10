@@ -98,7 +98,7 @@ def main():
 
     print('Creating sheet music...')
 
-    song_duration = librosa.get_duration(drum_track, sr=sample_rate)
+    song_duration = librosa.get_duration(y=drum_track, sr=sample_rate)
 
     sheet_music = drum_transcriber(df_pred,
                                     song_duration,

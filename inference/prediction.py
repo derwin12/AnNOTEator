@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from tensorflow import keras
+import keras
 import librosa
 
 def predict_drumhit(network,df, song_sampling_rate):

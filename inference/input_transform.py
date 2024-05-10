@@ -5,6 +5,9 @@ import numpy as np
 from pathlib import Path
 import multiprocessing
 from pedalboard import Pedalboard, Compressor
+import tensorflow as tf
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_start=None, drum_end=None):
     """
@@ -22,6 +25,14 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
     :return drum_track (numpy array):   the extracted drum track
     :return sample_rate (int):          the sampling rate of the extracted drum track
     """
+
+    gpu_devices = tf.config.list_physical_devices('GPU')
+
+    # Check if any GPU devices are available
+    if gpu_devices:
+        print("GPU device available.", gpu_devices)
+    else:
+        print("No GPU devices found.")
 
     if drum_start!= None or drum_end!=None:
         if isinstance(drum_start, type(None)):
@@ -89,7 +100,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
         wav = (wav - ref.mean()) / ref.std()
         sources = apply.apply_model(
             model, wav[None],
-            device='cpu',
+            device='cuda',   # 'cpu' or 'cuda'
             shifts=1,
             split=True,
             overlap=0.25,
@@ -98,7 +109,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
             )[0]
         
         sources = sources * ref.std() + ref.mean()
-        drum=sources[0]
+        drum=np.array(sources[0])
         sample_rate=model.samplerate
         drum_track=librosa.to_mono(drum)
 
@@ -152,9 +163,9 @@ def drum_to_frame(drum_track, sample_rate, estimated_bpm=None, resolution=16, fi
     if type(drum_track)!=np.ndarray:
         drum_track, sample_rate=librosa.load(drum_track, sr=None)
 
-    o_env = librosa.onset.onset_strength(drum_track, sr=sample_rate, hop_length=hop_length)
-    onset_frames=librosa.onset.onset_detect(drum_track, onset_envelope=o_env, sr=sample_rate, backtrack=backtrack)
-    peak_frames=librosa.onset.onset_detect(drum_track, onset_envelope=o_env, sr=sample_rate)
+    o_env = librosa.onset.onset_strength(y=drum_track, sr=sample_rate, hop_length=hop_length)
+    onset_frames=librosa.onset.onset_detect(y=drum_track, onset_envelope=o_env, sr=sample_rate, backtrack=backtrack)
+    peak_frames=librosa.onset.onset_detect(y=drum_track, onset_envelope=o_env, sr=sample_rate)
     onset_samples = librosa.frames_to_samples(onset_frames*(hop_length/512))
     peak_samples = librosa.frames_to_samples(peak_frames*(hop_length/512))
     
@@ -164,15 +175,16 @@ def drum_to_frame(drum_track, sample_rate, estimated_bpm=None, resolution=16, fi
     else:
         _8_duration=pd.Series(peak_samples).diff().mode()[0]
         estimated_bpm=60/(librosa.samples_to_time(_8_duration, sr=sample_rate)*2)
-    bpm=librosa.beat.tempo(drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
+    bpm=librosa.feature.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
+    # was librosa.beat.tempo
 
     print(f'Estimated BPM value: {bpm}')
     if bpm>110:
         print('Detected BPM value is larger than 110, re-calibrate the hop-length to 512 for more accurate result')
         hop_length=512
-        o_env = librosa.onset.onset_strength(drum_track, sr=sample_rate, hop_length=hop_length)
-        onset_frames=librosa.onset.onset_detect(drum_track, onset_envelope=o_env, sr=sample_rate, backtrack=backtrack)
-        peak_frames=librosa.onset.onset_detect(drum_track, onset_envelope=o_env, sr=sample_rate)
+        o_env = librosa.onset.onset_strength(y=drum_track, sr=sample_rate, hop_length=hop_length)
+        onset_frames=librosa.onset.onset_detect(y=drum_track, onset_envelope=o_env, sr=sample_rate, backtrack=backtrack)
+        peak_frames=librosa.onset.onset_detect(y=drum_track, onset_envelope=o_env, sr=sample_rate)
         onset_samples = librosa.frames_to_samples(onset_frames*(hop_length/512))
         peak_samples = librosa.frames_to_samples(peak_frames*(hop_length/512))
         
