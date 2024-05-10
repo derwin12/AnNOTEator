@@ -1,4 +1,9 @@
 # Byte-compiled / optimized / DLL files
+*.musicxml
+*.pdf
+pretrained_models/*
+
+
 __pycache__/
 *.py[cod]
 *$py.class
