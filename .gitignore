@@ -139,3 +139,12 @@ docker/song_midi/
 docker/test/
 docker/*.webm
 MuseScore*
+/TrainingRock.mp3
+/.idea
+/.vs/AnNOTEator
+/AnNOTEator38/Library
+/AnNOTEator38/Scripts
+/AnNOTEator38/share
+/AnNOTEator38/pyvenv.cfg
+/AnNOTEator.pyproj
+/AnNOTEator.pyproj.user
