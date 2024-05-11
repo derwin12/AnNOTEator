@@ -118,5 +118,5 @@ def main():
     if args.link!=None:
         os.remove(f_path)
 if __name__ == "__main__":
-    #freeze_support()
+    freeze_support()
     main()

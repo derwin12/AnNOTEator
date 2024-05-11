@@ -1,0 +1,12 @@
+librosa
+keras
+protobuf==3.19.0
+musdb
+museval
+spleeter==2.2.1
+music21
+pedalboard
+pytube
+numpy==1.18.5
+demucs
+diffq
