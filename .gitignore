@@ -148,3 +148,6 @@ MuseScore*
 /AnNOTEator38/pyvenv.cfg
 /AnNOTEator.pyproj
 /AnNOTEator.pyproj.user
+/AnNOTEatorMain/Scripts
+/.vs
+*.cfg
