@@ -1,5 +1,6 @@
 import argparse
 from os import path
+from multiprocessing import freeze_support
 import os
 
 def main():
@@ -117,4 +118,5 @@ def main():
     if args.link!=None:
         os.remove(f_path)
 if __name__ == "__main__":
+    #freeze_support()
     main()
