@@ -7,7 +7,8 @@ import multiprocessing
 from pedalboard import Pedalboard, Compressor
 import tensorflow as tf
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_start=None, drum_end=None):
     """
@@ -100,7 +101,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
         wav = (wav - ref.mean()) / ref.std()
         sources = apply.apply_model(
             model, wav[None],
-            device='cuda',   # 'cpu' or 'cuda'
+            device='cpu',   # 'cpu' or 'cuda'
             shifts=1,
             split=True,
             overlap=0.25,
@@ -175,10 +176,11 @@ def drum_to_frame(drum_track, sample_rate, estimated_bpm=None, resolution=16, fi
     else:
         _8_duration=pd.Series(peak_samples).diff().mode()[0]
         estimated_bpm=60/(librosa.samples_to_time(_8_duration, sr=sample_rate)*2)
-    bpm=librosa.feature.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
-    # was librosa.beat.tempo
+        
+    bpm=librosa.beat.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
+    # was librosa.feature.tempo
 
-    print(f'Estimated BPM value: {bpm}')
+    print(f'Estimated BPM value: {round(bpm)}')
     if bpm>110:
         print('Detected BPM value is larger than 110, re-calibrate the hop-length to 512 for more accurate result')
         hop_length=512
