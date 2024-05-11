@@ -26,13 +26,13 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
     :return sample_rate (int):          the sampling rate of the extracted drum track
     """
 
-    gpu_devices = tf.config.list_physical_devices('GPU')
+    #gpu_devices = tf.config.list_physical_devices('GPU')
 
     # Check if any GPU devices are available
-    if gpu_devices:
-        print("GPU device available.", gpu_devices)
-    else:
-        print("No GPU devices found.")
+    #if gpu_devices:
+     #   print("GPU device available.", gpu_devices)
+    #else:
+    #    print("No GPU devices found.")
 
     if drum_start!= None or drum_end!=None:
         if isinstance(drum_start, type(None)):
@@ -43,12 +43,15 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
     if kernel=='spleeter':
         from spleeter.audio.adapter import AudioAdapter
         from spleeter.separator import Separator
+        import os
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
         #default to use 4stems pre-train model from the Spleeter package for audio demixing 
-        separator = Separator('spleeter:4stems')
+        separator = Separator('spleeter:4stems') #, multiprocess=False)
 
         audio_adapter = AudioAdapter.default()
         #extract sampling rate from the audio file using the librosa package 
-        
+
         y, sr=librosa.load(
             path,
             offset=drum_start if drum_start is not None else 0,
@@ -64,7 +67,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
             duration=drum_end-drum_start if drum_end is not None else None,
             sample_rate=sample_rate
             )
-        
+
         prediction = separator.separate(waveform)
 
         #use librosa onset_detection algorithm to extract drum hit
@@ -100,7 +103,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
         wav = (wav - ref.mean()) / ref.std()
         sources = apply.apply_model(
             model, wav[None],
-            device='cuda',   # 'cpu' or 'cuda'
+            device='cpu',   # 'cpu' or 'cuda'
             shifts=1,
             split=True,
             overlap=0.25,
@@ -175,10 +178,10 @@ def drum_to_frame(drum_track, sample_rate, estimated_bpm=None, resolution=16, fi
     else:
         _8_duration=pd.Series(peak_samples).diff().mode()[0]
         estimated_bpm=60/(librosa.samples_to_time(_8_duration, sr=sample_rate)*2)
-    bpm=librosa.feature.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
+    bpm=librosa.beat.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
     # was librosa.beat.tempo
 
-    print(f'Estimated BPM value: {bpm}')
+    print(f'Estimated BPM value: {round(bpm)}')
     if bpm>110:
         print('Detected BPM value is larger than 110, re-calibrate the hop-length to 512 for more accurate result')
         hop_length=512
