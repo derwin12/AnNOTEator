@@ -16,6 +16,8 @@ export TF_GPU_ALLOCATOR=cuda_malloc_async
 Settings for Music21:
 %appdata%\music21-settings.xml
 
+requirementsJuly.txt
+(older)
 python -m pip install torchaudio==2.2.2+cu118 torchvision==0.17.2+cu118 torch==2.2.2+cu118 -f https://download.pytorch.org/whl/torch_stable.html
 
 c:\Users\daryl\anaconda3\condabin\conda.bad install -p c:/users/daryl/anaconda3/envs/AnNOTEator -c conda-forge cudatoolkit=11.2 cudnn=8.1.0

@@ -1,6 +1,7 @@
 import argparse
 from os import path
 import os
+import torch
 
 def main():
     parser = argparse.ArgumentParser(description="Transcribe the drum part of a given song", usage=None)
@@ -17,7 +18,7 @@ def main():
       
     parser.add_argument('-k', '--kernal',
                         default='demucs',
-                        choices=['spleeter', 'demucs'],
+                        choices=['demucs'],
                         type=str,
                         help='Kernel option to demix music')
 
@@ -117,4 +118,15 @@ def main():
     if args.link!=None:
         os.remove(f_path)
 if __name__ == "__main__":
+    #os.environ["PATH"] += os.pathsep + "D:\\Downloads2022\\ffmpeg\\ffmpeg\\bin"
+    #print(os.environ["PATH"])
+    if torch.cuda.is_available():
+        print("CUDA is available. PyTorch is using CUDA.")
+        print(f"CUDA version: {torch.version.cuda}")
+        print(f"Device count: {torch.cuda.device_count()}")
+        print(f"Current device: {torch.cuda.current_device()}")
+        print(f"Device name: {torch.cuda.get_device_name(torch.cuda.current_device())}")
+    else:
+        print("CUDA is not available. PyTorch is not using CUDA.")
+
     main()

@@ -40,40 +40,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
         if isinstance(drum_end, type(None)):
             raise ValueError('Please specify the music end time (in seconds) of your file / Youtube link')
 
-    if kernel=='spleeter':
-        from spleeter.audio.adapter import AudioAdapter
-        from spleeter.separator import Separator
-        import os
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-        #default to use 4stems pre-train model from the Spleeter package for audio demixing 
-        separator = Separator('spleeter:4stems') #, multiprocess=False)
-
-        audio_adapter = AudioAdapter.default()
-        #extract sampling rate from the audio file using the librosa package 
-
-        y, sr=librosa.load(
-            path,
-            offset=drum_start if drum_start is not None else 0,
-            duration=drum_end-drum_start if drum_end is not None else None,
-            sr=None
-            )
-
-        sample_rate = sr
-
-        waveform, _ = audio_adapter.load(
-            path,
-            offset=drum_start if drum_start is not None else None,
-            duration=drum_end-drum_start if drum_end is not None else None,
-            sample_rate=sample_rate
-            )
-
-        prediction = separator.separate(waveform)
-
-        #use librosa onset_detection algorithm to extract drum hit
-        drum_track=librosa.to_mono(prediction["drums"].T)
-
-    elif kernel=='demucs':
+    if kernel=='demucs':
         from demucs import pretrained, apply, audio
         if dir!=None:
             dir_path=dir
@@ -103,7 +70,7 @@ def drum_extraction(path, dir=None, kernel='demucs', mode='performance', drum_st
         wav = (wav - ref.mean()) / ref.std()
         sources = apply.apply_model(
             model, wav[None],
-            device='cpu',   # 'cpu' or 'cuda'
+            device='cuda',   # 'cpu' or 'cuda'
             shifts=1,
             split=True,
             overlap=0.25,
@@ -178,7 +145,7 @@ def drum_to_frame(drum_track, sample_rate, estimated_bpm=None, resolution=16, fi
     else:
         _8_duration=pd.Series(peak_samples).diff().mode()[0]
         estimated_bpm=60/(librosa.samples_to_time(_8_duration, sr=sample_rate)*2)
-    bpm=librosa.beat.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
+    bpm=librosa.feature.tempo(y=drum_track, sr=sample_rate, start_bpm=estimated_bpm)[0]
     # was librosa.beat.tempo
 
     print(f'Estimated BPM value: {round(bpm)}')
